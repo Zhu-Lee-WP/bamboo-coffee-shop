@@ -1,5 +1,5 @@
 // 檔案路徑: netlify/functions/create-ecpay-order.js
-// 最終修正版 - 使用最穩固的方式產生日期格式
+// 最終修正 - 使用 toLocaleString 校正交易時間的時區
 
 const fetch = require('node-fetch');
 const crypto = require('crypto');
@@ -49,16 +49,18 @@ exports.handler = async function(event, context) {
     const totalAmount = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const itemName = cartData.map(item => `${item.name} x ${item.quantity}`).join('#');
 
-    // ▼▼▼ 我們用最穩固、最安全的方式來產生日期 ▼▼▼
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    const tradeDate = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
-    // ▲▲▲ 我們用最穩固、最安全的方式來產生日期 ▲▲▲
+    // ▼▼▼ 將手動產生的日期區塊，替換成下面這一行 ▼▼▼
+    const tradeDate = new Date().toLocaleString('zh-TW', {
+        timeZone: 'Asia/Taipei',
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    }).replace(/-/g, '/');
+    // ▲▲▲ 這能確保無論伺服器在哪，都能產生出「台灣時區」的正確時間格式 ▲▲▲
 
     let orderParams = {
       MerchantID: merchantID,
@@ -68,16 +70,14 @@ exports.handler = async function(event, context) {
       TotalAmount: totalAmount,
       TradeDesc: '竹意軒咖啡工坊線上訂單',
       ItemName: itemName,
-      ReturnURL: `${process.env.URL}/.netlify/functions/ecpay-return`,
+      ReturnURL: returnURL,
       OrderResultURL: `${process.env.URL}/order-complete.html`,
       ClientBackURL: `${process.env.URL}/order-complete.html`,
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
-    console.log("準備發送到綠界的參數:", JSON.stringify(orderParams, null, 2));
 
-    // 我們的邏輯是先儲存訂單到 Netlify Forms，再產生加密碼
-    // (如果未來要換成 n8n+Google Sheets，也是在這個位置)
+    console.log("準備發送到綠界的參數:", JSON.stringify(orderParams, null, 2));
     await saveOrderToNetlifyForms(orderParams);
 
     const checkMacValue = generateCheckMacValue(orderParams, hashKey, hashIV);
