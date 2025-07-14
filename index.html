@@ -994,6 +994,16 @@ try {
     });
     </script>
     </script>
+    <form name="orders" netlify netlify-honeypot="bot-field" hidden>
+  <input type="hidden" name="form-name" value="orders" />
+  <p class="hidden">
+    <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+  </p>
+  <input type="text" name="merchantTradeNo" />
+  <input type="text" name="totalAmount" />
+  <input type="text" name="itemName" />
+  <input type="text" name="tradeStatus" />
+</form>
     
 </body>
 </html>
