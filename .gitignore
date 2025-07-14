@@ -1,0 +1,7 @@
+# 忽略 Node.js 的套件資料夾
+node_modules
+
+# 忽略環境變數檔案 (等等會建立)
+.env
+# Local Netlify folder
+.netlify

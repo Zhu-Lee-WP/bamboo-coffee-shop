@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竹意軒的咖啡工坊 | 探索單品咖啡的世界</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #FDFBF8; /* 溫暖的米白色背景 */
+            color: #4A4A4A; /* 深灰色文字 */
+        }
+        .hero-section {
+            background-image: url('https://images.unsplash.com/photo-1559925393-8be0ec4767c8?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            color: #6B4F4F; /* 咖啡棕色 */
+        }
+        .tab-btn.active {
+            border-bottom-color: #A0522D; /* 赭色 */
+            color: #A0522D;
+            font-weight: 700;
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        .coffee-card {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .coffee-card.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            display: none;
+        }
+        /* 圖片載入失敗時的樣式 */
+        img[alt] {
+        img[alt] {
+            text-align: center;
+            line-height: 14rem;
+            background-color: #e9ecef;
+            color: #6c7d6e;
+            font-size: 0.875rem;
+        }
+        }
+    </style>
+    <style>
+    #explore-flavors .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .continent-box {
+        background-color: #f7fafc;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        position: relative; /* 為了定位國家名稱 */
+    }
+
+    .continent-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .continent-map {
+        width: 100%;
+        height: auto; /* 保持地圖的比例 */
+    }
+
+    .country-path {
+        fill: #e0e0e0; /* 預設顏色 */
+        stroke: #d2d6dc;
+        stroke-width: 0.5px;
+        transition: fill 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+    .country-path.active {
+        fill: currentColor; /* 使用父元素的 color 屬性 */
+    }
+
+    .continent-box.americas {
+        color: #667eea; /* 紫藍色 */
+    }
+
+    .continent-box.africa {
+        color: #ed8936; /* 橘色 */
+    }
+
+    .continent-box.asia {
+        color: #48bb78; /* 青綠色 */
+    }
+
+    .continent-box.oceania {
+        color: #4299e1; /* 藍色 */
+    }
+
+    .country-name {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1rem;
+        font-weight: bold;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+    .country-path:hover + .country-name {
+        opacity: 1;
+    }
+</style>
+</head>
+<body class="bg-stone-50">
+
+    <!-- Header / 頁首導覽列 -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+    <nav class="container mx-auto px-6 py-3">
+        <div class="flex justify-between items-center">
+            <div class="text-xl font-bold text-gray-800">
+                <span class="text-amber-800">C.</span> 竹意軒的咖啡工坊
+            </div>
+            <div class="md:hidden">
+                <button id="menu-btn" type="button" class="text-gray-600 hover:text-amber-800 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="index.html" class="text-amber-800 hover:text-amber-600 font-bold border-r border-gray-300 pr-8">返回首頁</a>
+                <a href="#about-single-origin" class="text-gray-600 hover:text-amber-800">關於單品</a>
+                <a href="#processing-methods" class="text-gray-600 hover:text-amber-800">咖啡處理法</a>
+                <a href="#explore-flavors" class="text-gray-600 hover:text-amber-800">探索風味</a>
+                <a href="#pour-over-guide" class="text-gray-600 hover:text-amber-800">手沖建議</a>
+                <button id="open-cart-btn" class="relative text-gray-600 hover:text-amber-800">
+    <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+</button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden mt-4">
+            <a href="index.html" class="block py-2 font-bold text-amber-800 hover:text-amber-600">返回首頁</a>
+            <a href="#about-single-origin" class="block py-2 text-gray-600 hover:text-amber-800">關於單品</a>
+            <a href="#processing-methods" class="block py-2 text-gray-600 hover:text-amber-800">咖啡處理法</a>
+            <a href="#explore-flavors" class="block py-2 text-gray-600 hover:text-amber-800">探索風味</a>
+            <button id="open-cart-btn" class="relative text-gray-600 hover:text-amber-800">
+    <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+</button>
+        </div>
+    </nav>
+</header>
+
+    <!-- Hero Section / 主視覺區 -->
+
+    <section class="h-auto md:h-[22.5vh] flex flex-col md:flex-row text-gray-800">
+        <div class="w-full md:w-[2.5%] bg-amber-900 flex items-center justify-center p-8">
+        </div>
+
+        <div class="w-full md:w-[15%] bg-amber-100 flex items-center justify-center p-4">
+            <img src="images/New logo.png" alt="品牌Logo" class="w-[80%] md:w-full h-auto mx-auto md:mx-0">
+        </div>
+        
+       <div class="w-full md:w-[82.5%] flex items-center justify-center p-8 relative text-white bg-cover bg-center" style="background-image: url('images/roaster.jpg');">
+
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="text-center relative">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 tracking-wider">探索咖啡的豐富滋味</h1>
+        <p class="text-xl md:text-xl max-w-l mx-auto">來自世界各地的咖啡，將風土濃縮在杯裡</p>
+    </div>
+
+</div>
+    </section>
+
+    <main class="container mx-auto px-6 py-12 md:py-20">
+
+        <!-- Section 1: 關於單品咖啡 -->
+        <section id="about-single-origin" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">什麼是單品咖啡？</h2>
+            <p class="text-center text-gray-500 mb-10">一場味蕾的產地探查</p>
+            <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                <div class="md:w-1/2 w-full flex justify-center md:justify-end">
+                    <img src="images/banner2.jpg" alt="一杯手沖咖啡與咖啡豆" class="rounded-lg shadow-lg w-5/6 h-auto object-cover">
+                </div>
+                <div class="md:w-1/2 w-full flex justify-center">
+                    <div class="max-w-md">
+                        <p class="text-lg mb-4 text-gray-700">
+                            單品咖啡 (Single Origin Coffee) 指的是來自『單一來源』的咖啡豆，廣義可以大至國家、地區，細至處理廠、農民。單品咖啡最大的特點是他的可追朔性。
+                        </p>
+                        <p class="text-lg mb-4 text-gray-700">
+                            烘豆師、吧台手、消費者都可以藉由資訊來了解咖啡來源，愛好者可以大致聯想這隻豆子沖煮出來的風味，透過比較不同來源的咖啡為樂趣來品嘗咖啡。
+                        </p>
+                        <p class="text-lg mb-4 text-gray-700">
+                            相對於追求風味平衡穩定的「配方豆」，單品咖啡更像是一場探索，讓您能比較不同風土環境下所產製出來的咖啡，感受咖啡多樣的樣貌。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: 咖啡處理法 -->
+        <section id="processing-methods" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">風味的關鍵：處理法</h2>
+            <p class="text-center text-gray-500 mb-10">決定咖啡豆靈魂的四種採後處理法</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-10">
+                <!-- 日曬法卡片 -->
+                <div class="bg-white p-8 rounded-lg shadow-md card-hover flex flex-col items-center text-center">
+                    <div class="w-24 h-24 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-amber-700">日曬法</h3>
+                    <p class="text-gray-600">
+                        又稱自然乾燥法，將整顆咖啡果實直接曝曬，於乾燥的過程中，讓果肉的糖分與風味滲入豆中。風味通常較濃郁奔放，具有熱帶水果發酵感。
+                    </p>
+                </div>
+                <!-- 水洗法卡片 -->
+                <div class="bg-white p-8 rounded-lg shadow-md card-hover flex flex-col items-center text-center">
+                    <div class="w-24 h-24 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-waves"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-blue-700">水洗法</h3>
+                    <p class="text-gray-600">
+                        先去除果皮果肉，再於水洗槽中進行發酵，目的是洗去果膠層，最後再進行乾燥。風味最能反映產區原始特色，口感乾淨明亮、酸質活潑、層次清晰。
+                    </p>
+                </div>
+                <!-- 蜜處理卡片 -->
+                <div class="bg-white p-8 rounded-lg shadow-md card-hover flex flex-col items-center text-center">
+                     <div class="w-24 h-24 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#D32F2F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-milk-icon lucide-milk"><path d="M8 2h8"/><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2"/><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-red-700">蜜處理</h3>
+                    <p class="text-gray-600">
+                        去除果皮後，保留帶有甜份的果肉層進行乾燥。風味根據保留的果肉厚度以及乾燥時間有影響，大致介於日曬與水洗處理法間，兼具果香與乾淨度。
+                    </p>
+                </div>
+                <!-- 厭氧處理卡片 -->
+                <div class="bg-white p-8 rounded-lg shadow-md card-hover flex flex-col items-center text-center">
+                     <div class="w-24 h-24 mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="oklch(45.2% 0.211 324.591)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-barrel-icon lucide-barrel"><path d="M10 3a41 41 0 0 0 0 18"/><path d="M14 3a41 41 0 0 1 0 18"/><path d="M17 3a2 2 0 0 1 1.68.92 15.25 15.25 0 0 1 0 16.16A2 2 0 0 1 17 21H7a2 2 0 0 1-1.68-.92 15.25 15.25 0 0 1 0-16.16A2 2 0 0 1 7 3z"/><path d="M3.84 17h16.32"/><path d="M3.84 7h16.32"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-fuchsia-800">厭氧處理</h3>
+                    <p class="text-gray-600">
+                        將咖啡果實放入無氧環境下的容器進行發酵，因為發酵時能另外控制各項變因(菌種添加、輔助材料、溫度等)，發展出千變萬化的風味，為傳統咖啡風味帶來了突破。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: 探索風味 (互動區塊) -->
+        <section id="explore-flavors" class="mb-16 md:mb-24 scroll-mt-20">
+    <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">探索世界產區</h2>
+    <p class="text-center text-gray-500 mb-10">四大洲的咖啡風貌，一目了然</p>
+
+    <div class="max-w-6xl mx-auto"> 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-md flex flex-col items-center text-center gap-4">
+                <div class="w-full h-48 flex items-center justify-center">
+                    <img src="images/america.png" alt="中南美洲咖啡產區地圖" class="w-full h-full object-contain">
+                </div>
+                <div class="w-full">
+                    <h3 class="text-2xl font-bold text-green-500 mb-2">中南美洲 The Americas</h3>
+                    <p class="text-l text-gray-600">全球最大的咖啡產地，風味均衡、樣貌多元，從溫和的堅果、巧克力到明亮的果酸調性皆有，各式處理法也百花齊放。</p>
+                    <p class="mt-3 text-l font-semibold text-gray-800">重要產區：<span class="font-normal">哥倫比亞、巴西、瓜地馬拉、薩爾瓦多以及加勒比海地區等等</span></p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-md flex flex-col items-center text-center gap-4">
+                <div class="w-full h-48 flex items-center justify-center">
+                    <img src="images/africa.png" alt="非洲咖啡產區地圖" class="w-full h-full object-contain">
+                </div>
+                <div class="w-full">
+                    <h3 class="text-2xl font-bold text-red-500 mb-2">非洲 Africa</h3>
+                    <p class="text-l text-gray-600">阿拉比卡咖啡的起源地，以其奔放、多樣的果香和花香聞名，尤其是已流行多年的耶家雪啡，即為衣索比亞的知名產區，也如此非洲絕對是頂級精品咖啡的聖地。</p>
+                    <p class="mt-3 text-l font-semibold text-gray-800">重要產區：<span class="font-normal">衣索比亞、肯亞、盧安達、坦尚尼亞、普隆地等</span></p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-md flex flex-col items-center text-center gap-4">
+                <div class="w-full h-48 flex items-center justify-center">
+                    <img src="images/Asia.png" alt="亞洲咖啡產區地圖" class="w-full h-full object-contain">
+                </div>
+                <div class="w-full">
+                    <h3 class="text-2xl font-bold text-yellow-500 mb-2">亞洲 Asia</h3>
+                    <p class="text-l text-gray-600">古老傳統產區與新興產區皆有，因為範圍大，各產區多有其特殊處理方式，比如印尼的濕播處理以及印度的風漬處理，台灣近年咖啡專業咖啡農以及處理技術也持續發展中。</p>
+                    <p class="mt-3 text-l font-semibold text-gray-800">重要產區：<span class="font-normal">印尼、葉門、越南、台灣、緬甸、中國雲南、印度等</span></p>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-md flex flex-col items-center text-center gap-4">
+                <div class="w-full h-48 flex items-center justify-center">
+                    <img src="images/aus.png" alt="大洋洲咖啡產區地圖" class="w-full h-full object-contain">
+                </div>
+                <div class="w-full">
+                    <h3 class="text-2xl font-bold text-blue-500 mb-2">大洋洲 Oceania</h3>
+                    <p class="text-l text-gray-600">此區產量相對較少，但也具其風味特色，是精品咖啡地圖上不容錯過的一塊。</p>
+                    <p class="mt-3 text-l font-semibold text-gray-800">重要產區：<span class="font-normal">巴布亞紐幾內亞、澳洲</span></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+        <!-- Section 4: 手沖準則 -->
+        <section id="pour-over-guide" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">手沖咖啡建議準則</h2>
+            <p class="text-center text-gray-500 mb-10">掌握四個關鍵，調整出您的喜愛咖啡</p>
+            <div class="bg-white rounded-lg shadow-lg p-8 md:p-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+                    <!-- 粉水比例 -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-amber-100 rounded-full">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A0522D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ratio"><rect width="12" height="12" x="6" y="6" rx="2"/><path d="m18 18-6-6"/></svg>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2">粉水比例</h4>
+                        <p class="text-gray-600">從 1:15 開始 (20g粉 : 300g水)，再依喜好調整比例。</p>
+                    </div>
+                    <!-- 研磨粗細 -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-amber-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A0522D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whole-word"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><path d="M12 12H8"/></svg>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2">研磨粗細</h4>
+                        <p class="text-gray-600">可以設定研磨度約於二號砂糖顆粒大小，視流速調整。</p>
+                    </div>
+                    <!-- 沖煮水溫 -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-amber-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A0522D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-thermometer"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2">沖煮水溫</h4>
+                        <p class="text-gray-600">淺焙豆可以 90-93°C，深焙豆 88-90°C開始嘗試。</p>
+                    </div>
+                    <!-- 沖煮時間 -->
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-amber-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A0522D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-timer"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="12" y1="6" y2="6"/><circle cx="12" cy="14" r="8"/></svg>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2">沖煮時間</h4>
+                        <p class="text-gray-600">包含悶蒸，總時間控制在約莫 2 至 2.5 分鐘。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="product-list" class="mt-12 md:mt-16 mb-12 md:mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">本月精選咖啡</h2>
+            <p class="text-center text-gray-500 mb-10">來自世界咖啡產區的風土滋味</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover flex flex-col" data-product-id="prod_001">
+                    <img src="images/coffee/衣索比亞 雅比兔 水洗.jpg" alt="衣索比亞 耶家雪菲 咖啡豆" class="w-full h-56 object-cover">
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-2">衣索比亞 古籍 烏拉嘎 雅比兔 水洗</h3>
+                        <p class="text-gray-600 mb-4 h-20">風味描述：檸檬皮、蜜柚、橘皮、蔗糖。</p>
+        
+                            <div class="space-y-2 mb-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_001" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="half-pound" data-price="380" data-spec-name="半磅" checked>
+                                    <span class="ml-3 text-gray-700">
+                                         <span class="font-bold">半磅 (咖啡豆)</span>
+                                         <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 380</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_001" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="drip-bag-5" data-price="150" data-spec-name="濾掛5包">
+                                    <span class="ml-3 text-gray-700">
+                                        <span class="font-bold">濾掛包 (5入)</span>
+                                        <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 150</span>
+                                    </span>
+                                </label>
+                            </div>
+        
+                            <div class="mt-auto">
+                                <button 
+                                    class="add-to-cart-btn w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300"
+                                    data-name="衣索比亞 古籍 烏拉嘎 雅比兔 水洗">
+                                    加入購物車
+                                </button>
+                            </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover flex flex-col" data-product-id="prod_002">
+                    <img src="images/coffee/衣索比亞 卡拉莫 遮蔭慢乾 日曬.jpg" alt="衣索比亞 咖啡豆" class="w-full h-56 object-cover">
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-2">衣索比亞 古吉 卡拉莫 遮蔭慢乾 日曬</h3>
+                        <p class="text-gray-600 mb-4 h-20">風味描述：藍莓、橙汁、薰衣草、蔗糖。</p>
+        
+                            <div class="space-y-2 mb-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_002" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="half-pound" data-price="390" data-spec-name="半磅" checked>
+                                    <span class="ml-3 text-gray-700">
+                                         <span class="font-bold">半磅 (咖啡豆)</span>
+                                         <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 390</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_002" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="drip-bag-5" data-price="150" data-spec-name="濾掛5包">
+                                    <span class="ml-3 text-gray-700">
+                                        <span class="font-bold">濾掛包 (5入)</span>
+                                        <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 150</span>
+                                    </span>
+                                </label>
+                            </div>
+        
+                            <div class="mt-auto">
+                                <button 
+                                    class="add-to-cart-btn w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300"
+                                    data-name="衣索比亞 古吉 卡拉莫 遮蔭慢乾 日曬">
+                                    加入購物車
+                                </button>
+                            </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover flex flex-col" data-product-id="prod_003">
+                    <img src="images/coffee/肯亞 冽里 吉康達合作社 水洗.jpg" alt="肯亞 咖啡豆" class="w-full h-56 object-cover">
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-2">肯亞 冽里 吉康達合作社 AB Top 水洗</h3>
+                        <p class="text-gray-600 mb-4 h-20">風味描述：黑醋栗、烏梅、洛神花、蔗糖。</p>
+        
+                            <div class="space-y-2 mb-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_003" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="half-pound" data-price="370" data-spec-name="半磅" checked>
+                                    <span class="ml-3 text-gray-700">
+                                         <span class="font-bold">半磅 (咖啡豆)</span>
+                                         <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 370</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_003" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="drip-bag-5" data-price="150" data-spec-name="濾掛5包">
+                                    <span class="ml-3 text-gray-700">
+                                        <span class="font-bold">濾掛包 (5入)</span>
+                                        <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 150</span>
+                                    </span>
+                                </label>
+                            </div>
+        
+                            <div class="mt-auto">
+                                <button 
+                                    class="add-to-cart-btn w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300"
+                                    data-name="肯亞 冽里 吉康達合作社 AB Top 水洗">
+                                    加入購物車
+                                </button>
+                            </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover flex flex-col" data-product-id="prod_004">
+                    <img src="images/coffee/宏都拉斯 蜜桃莊園 卡杜艾.jpg" alt="宏都拉斯 咖啡豆" class="w-full h-56 object-cover">
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-2">宏都拉斯 拉巴斯省 蜜桃莊園 卡度艾 蜜處理</h3>
+                        <p class="text-gray-600 mb-4 h-20">風味描述：橘皮、香瓜、烤杏仁、白糖。</p>
+        
+                            <div class="space-y-2 mb-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_004" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="half-pound" data-price="360" data-spec-name="半磅" checked>
+                                    <span class="ml-3 text-gray-700">
+                                         <span class="font-bold">半磅 (咖啡豆)</span>
+                                         <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 360</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_004" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="drip-bag-5" data-price="150" data-spec-name="濾掛5包">
+                                    <span class="ml-3 text-gray-700">
+                                        <span class="font-bold">濾掛包 (5入)</span>
+                                        <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 150</span>
+                                    </span>
+                                </label>
+                            </div>
+        
+                            <div class="mt-auto">
+                                <button 
+                                    class="add-to-cart-btn w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300"
+                                    data-name="宏都拉斯 拉巴斯省 蜜桃莊園 卡度艾 蜜處理">
+                                    加入購物車
+                                </button>
+                            </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover flex flex-col" data-product-id="prod_005">
+                    <img src="images/coffee/衣索比亞 八蕾處理廠.jpg" alt="伊索比亞 咖啡豆" class="w-full h-56 object-cover">
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-2">衣索比亞 西達瑪 柏娜 芭蕾處理場 日曬</h3>
+                        <p class="text-gray-600 mb-4 h-20">風味描述：葡萄、甜桃、梔子花、蔗糖。</p>
+        
+                            <div class="space-y-2 mb-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_005" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="half-pound" data-price="400" data-spec-name="半磅" checked>
+                                    <span class="ml-3 text-gray-700">
+                                         <span class="font-bold">半磅 (咖啡豆)</span>
+                                         <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 400</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_005" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="drip-bag-5" data-price="175" data-spec-name="濾掛5包">
+                                    <span class="ml-3 text-gray-700">
+                                        <span class="font-bold">濾掛包 (5入)</span>
+                                        <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 175</span>
+                                    </span>
+                                </label>
+                            </div>
+        
+                            <div class="mt-auto">
+                                <button 
+                                    class="add-to-cart-btn w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300"
+                                    data-name="衣索比亞 西達瑪 柏娜 芭蕾處理場 日曬">
+                                    加入購物車
+                                </button>
+                            </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden card-hover flex flex-col" data-product-id="prod_006">
+                    <img src="images/coffee/哥倫比亞 薇拉省 水洗.jpg" alt="哥倫比亞 咖啡豆" class="w-full h-56 object-cover">
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-2">哥倫比亞 薇拉省 黃金酋長 水洗</h3>
+                        <p class="text-gray-600 mb-4 h-20">風味描述：橘皮、烤堅果、奶油、蔗糖。</p>
+        
+                            <div class="space-y-2 mb-4">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_006" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="half-pound" data-price="350" data-spec-name="半磅" checked>
+                                    <span class="ml-3 text-gray-700">
+                                         <span class="font-bold">半磅 (咖啡豆)</span>
+                                         <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 350</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
+                                    <input type="radio" name="spec_prod_006" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" value="drip-bag-5" data-price="150" data-spec-name="濾掛5包">
+                                    <span class="ml-3 text-gray-700">
+                                        <span class="font-bold">濾掛包 (5入)</span>
+                                        <span class="text-lg font-semibold text-gray-800 ml-2">NT$ 150</span>
+                                    </span>
+                                </label>
+                            </div>
+        
+                            <div class="mt-auto">
+                                <button 
+                                    class="add-to-cart-btn w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300"
+                                    data-name="哥倫比亞 薇拉省 黃金酋長 水洗">
+                                    加入購物車
+                                </button>
+                            </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+       <section id="connect" class="bg-white py-16 md:py-24">
+    <div class="container mx-auto px-6">
+        
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-800">與我們互動</h2>
+            <p class="text-gray-500 mt-2">關注我們的最新動態，或將您的任何想法、建議與回饋告訴我們！</p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-12 lg:gap-16 items-start">
+
+            <div class="w-full md:w-1/2">
+                
+                <div class="mb-10 text-center">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4">追蹤我們的社群</h3>
+                    <div class="flex justify-center gap-6">
+                        <a href="https://www.facebook.com/bamboocoffeestudio" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-green-700 transition-colors">
+                            <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/bamboo_gabe/" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-green-700 transition-colors">
+                             <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664 4.771 4.919-4.919 1.266.058 1.644.07 4.85.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44 1.441-.645 1.441-1.44-.645-1.44-1.441-1.44z"/></svg>
+                        </a>
+                        <a href="https://youtube.com/@bonsairecording?si=0vsuKiWxxalxdPBf" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-green-700 transition-colors">
+                            <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        </a>
+                        <a href="https://page.line.me/470ojyrk" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-green-700 transition-colors">
+                            <svg class="w-8 h-8" viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="bold">LINE</text>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+    <h3 class="text-xl font-bold text-gray-700 mb-4">意見回饋</h3>
+    <form id="feedback-form" action="https://BambooLee-n8n-free.hf.space/webhook/46a669a0-bd7b-47ff-9f2b-28731ff615f2" method="POST">
+        <div class="mb-4">
+            <label for="name" class="block text-gray-700 text-sm font-bold mb-2 text-left">您的稱呼：</label>
+            <input type="text" id="name" name="name" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+
+        <div class="mb-4">
+            <label for="email" class="block text-gray-700 text-sm font-bold mb-2 text-left">您的信箱 (非必填)：</label>
+            <input type="email" id="email" name="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        </div>
+        <div class="mb-6">
+            <label for="feedback" class="block text-gray-700 text-sm font-bold mb-2 text-left">您的建議、回饋或詢問：</label>
+            <textarea id="feedback" name="feedback" rows="4" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+        </div>
+        <div class="flex items-center justify-start">
+            <button type="submit" class="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline transition-colors">
+                提交
+            </button>
+        </div>
+    </form>
+</div>
+            </div>
+
+            <div class="w-full md:w-1/2">
+                <div class="grid grid-cols-2 gap-4">
+                    <img src="images/咖啡豆.jpg" alt="竹意軒咖啡" class="rounded-lg shadow-md aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300">
+                    <img src="images/P1240561.jpg" alt="烘豆進程" class="rounded-lg shadow-md aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300">
+                    <img src="images/濾掛包.jpg" alt="竹意軒濾掛包" class="rounded-lg shadow-md aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300">
+                    <img src="images/banner.jpg" alt="冰咖啡" class="rounded-lg shadow-md aspect-[4/3] object-cover hover:scale-105 transition-transform duration-300">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    </main>
+
+    <!-- Footer / 頁尾 -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>© 2025 竹意軒的咖啡工坊. All Rights Reserved.</p>
+            <p class="text-sm text-gray-400 mt-2">烘一鍋咖啡，再沖出生活的美好。</p>
+            <p class="text-sm text-gray-400 mt-4">
+                本頁瀏覽人次：<span id="view-counter" class="font-bold">載入中...</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const coffeeCards = document.querySelectorAll('.coffee-card');
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            // 漢堡選單功能
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // 頁籤篩選功能
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 更新頁籤樣式
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const filter = tab.dataset.filter;
+
+                    // 篩選咖啡卡片
+                    coffeeCards.forEach(card => {
+                        const cardGroup = card.dataset.group;
+                        // 特殊處理印尼曼特寧，讓它在日曬分類也顯示
+                        const isSpecialCase = (filter === 'natural' && cardGroup === 'wet-hulled');
+
+                        if (filter === 'all' || cardGroup === filter || isSpecialCase) {
+                            // 使用 setTimeout 讓 CSS transition 效果可見
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                card.style.display = 'block';
+                                setTimeout(() => {
+                                    card.style.opacity = '1';
+                                    card.style.transform = 'scale(1)';
+                                }, 10);
+                            }, 250);
+                        } else {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                card.style.display = 'none';
+                            }, 250); // 配合 transition 時間
+                        }
+                    });
+                });
+            });
+            
+            // 頁內平滑滾動
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    
+                    // 點擊連結後關閉行動版選單
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // 初始載入時顯示所有卡片
+            coffeeCards.forEach(card => {
+                card.style.display = 'block';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            });
+
+        });
+    </script>
+    <script>
+    // 等待整個網頁文件都載入完成後，再執行裡面的程式碼
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // 透過我們剛剛設定的 ID，找到表單元素
+        const form = document.getElementById('feedback-form');
+
+        // 為這個表單加上一個「提交」事件的監聽器
+        form.addEventListener('submit', function(event) {
+            
+            // 1. 阻止表單的預設提交行為 (也就是阻止頁面跳轉)
+            event.preventDefault();
+
+            // 2. 收集表單中的所有資料
+            const formData = new FormData(form);
+            const actionUrl = form.action;
+
+            // 3. 在背景發送資料到 n8n 的 Webhook 網址
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json()) // 解析 n8n 回傳的 JSON
+            .then(data => {
+                // 4. 發送成功後執行的事
+                console.log('Success:', data); // 在瀏覽器控制台印出成功訊息，方便除錯
+                alert('感謝您的回饋，我們已成功收到您的訊息！'); // 跳出成功視窗
+                form.reset(); // 清空表單欄位
+            })
+            .catch((error) => {
+                // 5. 如果發送失敗，跳出錯誤視窗
+                console.error('Error:', error);
+                alert('訊息傳送失敗，請稍後再試。');
+            });
+        });
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const el = document.getElementById('view-counter');
+  const namespace = 'bamboosite';     // 自訂，類似舊的「namespace」
+  const name      = 'main-page';      // 自訂，類似舊的「key」
+
+  try {
+    // 每次載入 +1 並回傳最新值
+    const res  = await fetch(`https://api.counterapi.dev/v1/ZueYiXuan-page/coffee-page/up`);
+    const data = await res.json();        // 回傳格式：{ namespace, name, count }
+    el.textContent = data.count;
+  } catch (err) {
+    console.error('載入計數器失敗:', err);
+    el.textContent = '無法載入';
+  }
+});
+</script>
+<div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-2xl font-bold text-gray-800">您的購物車</h2>
+            <button id="close-cart-btn" class="text-gray-600 hover:text-gray-900">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <div id="cart-items" class="p-4 flex-grow overflow-y-auto">
+            <p class="text-gray-500">您的購物車是空的。</p>
+        </div>
+
+        <div class="p-4 border-t bg-gray-50">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-lg font-bold">總計：</span>
+                <span id="cart-total" class="text-2xl font-bold text-gray-800">NT$ 0</span>
+            </div>
+            <button id="checkout-btn" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                前往結帳
+            </button>
+        </div>
+    </div>
+    <script>
+    // 使用 DOMContentLoaded 確保在操作DOM之前，HTML已完全載入
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // --- 1. 獲取所有需要的 HTML 元素 ---
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const openCartBtn = document.getElementById('open-cart-btn');
+        const closeCartBtn = document.getElementById('close-cart-btn');
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalEl = document.getElementById('cart-total');
+        const cartCountEl = document.getElementById('cart-count');
+        const checkoutBtn = document.getElementById('checkout-btn');
+
+        // --- 2. 初始化購物車 ---
+        let cart = JSON.parse(localStorage.getItem('bamboo_cart')) || [];
+
+        // --- 3. 核心功能函式 ---
+        function addToCart(product) {
+            const existingItem = cart.find(item => item.id === product.id);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            alert(`「${product.name}」已加入購物車！`);
+            updateCart();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+        
+        function updateCart() {
+            renderCartItems();
+            renderCartTotal();
+            saveCart();
+        }
+        
+        function saveCart() {
+            localStorage.setItem('bamboo_cart', JSON.stringify(cart));
+        }
+
+        function renderCartItems() {
+            cartItemsContainer.innerHTML = '';
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="text-gray-500">您的購物車是空的。</p>';
+                cartCountEl.classList.add('hidden');
+                return;
+            }
+            let totalItems = 0;
+            cart.forEach(item => {
+                totalItems += item.quantity;
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex justify-between items-center mb-4 p-2 border-b';
+                itemEl.innerHTML = `
+                    <div class="w-3/4">
+                        <p class="font-bold truncate">${item.name}</p>
+                        <p class="text-sm text-gray-600">NT$ ${item.price} x ${item.quantity}</p>
+                    </div>
+                    <div class="w-1/4 text-right">
+                        <button class="remove-from-cart-btn text-red-500 hover:text-red-700 text-sm" data-id="${item.id}">移除</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(itemEl);
+            });
+            
+            if (totalItems > 0) {
+                cartCountEl.textContent = totalItems;
+                cartCountEl.classList.remove('hidden');
+            } else {
+                cartCountEl.classList.add('hidden');
+            }
+        }
+        
+        function renderCartTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotalEl.textContent = `NT$ ${total}`;
+        }
+
+        // --- 4. 設定事件監聽器 ---
+        openCartBtn.addEventListener('click', () => {
+            cartSidebar.classList.remove('translate-x-full');
+        });
+
+        closeCartBtn.addEventListener('click', () => {
+            cartSidebar.classList.add('translate-x-full');
+        });
+
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const buttonEl = event.currentTarget;
+                const productCard = buttonEl.closest('[data-product-id]');
+                const productIdBase = productCard.dataset.productId;
+                const productName = buttonEl.dataset.name;
+                const selectedSpecEl = productCard.querySelector(`input[name="spec_${productIdBase}"]:checked`);
+                if (!selectedSpecEl) {
+                    alert('請選擇一個商品規格！');
+                    return;
+                }
+                const specValue = selectedSpecEl.value;
+                const specName = selectedSpecEl.dataset.specName;
+                const price = parseInt(selectedSpecEl.dataset.price, 10);
+                const uniqueProductId = `${productIdBase}_${specValue}`;
+                const product = {
+                    id: uniqueProductId,
+                    name: `${productName} (${specName})`,
+                    price: price,
+                };
+                addToCart(product);
+            });
+        });
+        
+        cartItemsContainer.addEventListener('click', (event) => {
+            if (event.target && event.target.classList.contains('remove-from-cart-btn')) {
+                const productId = event.target.dataset.id;
+                removeFromCart(productId);
+            }
+        });
+
+        // ==========================================================
+        //         這裡是我們更新的「前往結帳」按鈕監聽器
+        // ==========================================================
+        checkoutBtn.addEventListener('click', async () => { // 注意這裡加上了 async
+            if (cart.length === 0) {
+                alert('您的購物車是空的！');
+                return;
+            }
+
+            // 顯示一個處理中的提示
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = '訂單處理中...';
+
+            // 在 checkoutBtn 的 addEventListener 中，找到 try { ... } 區塊並替換成以下內容
+
+try {
+    // ... (fetch 的部分保持不變) ...
+    const response = await fetch('/.netlify/functions/create-ecpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cart),
+    });
+
+    if (!response.ok) {
+        throw new Error(`伺服器回應錯誤: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('前端收到來自後端的回應:', result);
+
+    // ==========================================================
+    //         這是新的部分：動態建立表單並提交
+    // ==========================================================
+
+    // 1. 建立一個 form 元素
+    const form = document.createElement('form');
+    form.method = 'POST';
+    // 注意：這裡我們使用綠界的「測試」環境網址
+    form.action = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut'; 
+    form.style.display = 'none'; // 讓表單在畫面上不可見
+
+    // 2. 將後端回傳的訂單資料，一一建立成隱藏的 input 欄位
+    for (const key in result.orderData) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = result.orderData[key];
+        form.appendChild(input);
+    }
+
+    // 3. 建立 CheckMacValue 的隱藏 input 欄位
+    const checkMacValueInput = document.createElement('input');
+    checkMacValueInput.type = 'hidden';
+    checkMacValueInput.name = 'CheckMacValue';
+    checkMacValueInput.value = result.checkMacValue;
+    form.appendChild(checkMacValueInput);
+
+    // 4. 將表單加到網頁中，並自動送出
+    document.body.appendChild(form);
+    form.submit();
+
+            } catch (error) {
+                console.error('呼叫後端 Function 時發生錯誤:', error);
+                alert('訂單建立失敗，請查看瀏覽器控制台的錯誤訊息。');
+            } finally {
+                // 無論成功或失敗，都恢復按鈕的狀態
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = '前往結帳';
+            }
+        });
+
+        // --- 5. 初始載入 ---
+        updateCart();
+    });
+    </script>
+    </script>
+    
+</body>
+</html>
