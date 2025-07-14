@@ -74,6 +74,7 @@ exports.handler = async function(event, context) {
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
+    console.log("準備發送到綠界的參數:", JSON.stringify(orderParams, null, 2));
 
     // 我們的邏輯是先儲存訂單到 Netlify Forms，再產生加密碼
     // (如果未來要換成 n8n+Google Sheets，也是在這個位置)
