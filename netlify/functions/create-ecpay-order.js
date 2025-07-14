@@ -68,8 +68,8 @@ exports.handler = async function(event, context) {
       TotalAmount: totalAmount,
       TradeDesc: '竹意軒咖啡工坊線上訂單',
       ItemName: itemName,
-      ReturnURL: returnURL,
-      OrderResultURL: '/order-complete.html',
+      ReturnURL: `${process.env.URL}/.netlify/functions/ecpay-return`,
+      OrderResultURL: `${process.env.URL}/order-complete.html`,
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
