@@ -61,7 +61,7 @@ exports.handler = async function(event, context) {
 
     // 4. 將使用者導向感謝頁面
     // 我們在網址上附上訂單編號，讓感謝頁面可以顯示
-    const thankYouUrl = `/order-complete.html?orderId=${responseData.MerchantTradeNo}`;
+    const thankYouUrl = `/order-complete?orderId=${responseData.MerchantTradeNo}`;
 
     return {
       statusCode: 302, // 302 是「暫時重導向」的 HTTP 狀態碼
