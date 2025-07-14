@@ -1,43 +1,36 @@
 // 檔案路徑: netlify/functions/create-ecpay-order.js
-// 【儲存訂單最終版】- 新增了將訂單儲存至 Netlify Forms 的功能
+// 最終修正版 - 使用最穩固的方式產生日期格式
 
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 
-// ... generateCheckMacValue 函式維持不變 ...
+// ... generateCheckMacValue 和 saveOrderToNetlifyForms 函式維持不變 ...
 function generateCheckMacValue(params, hashKey, hashIV) {
-  const sortedKeys = Object.keys(params).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-  let checkString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
-  checkString = `HashKey=${hashKey}&${checkString}&HashIV=${hashIV}`;
-  let encodedString = encodeURIComponent(checkString).toLowerCase();
-  encodedString = encodedString.replace(/'/g, "%27").replace(/~/g, "%7e").replace(/%20/g, "+");
-  const hash = crypto.createHash('sha256').update(encodedString).digest('hex');
-  return hash.toUpperCase();
+    const sortedKeys = Object.keys(params).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    let checkString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
+    checkString = `HashKey=${hashKey}&${checkString}&HashIV=${hashIV}`;
+    let encodedString = encodeURIComponent(checkString).toLowerCase();
+    encodedString = encodedString.replace(/'/g, "%27").replace(/~/g, "%7e").replace(/%20/g, "+");
+    const hash = crypto.createHash('sha256').update(encodedString).digest('hex');
+    return hash.toUpperCase();
 }
-
-/**
- * ▼▼▼ 新增的函式：儲存訂單到 Netlify Forms ▼▼▼
- */
 async function saveOrderToNetlifyForms(orderData) {
-  const formData = new URLSearchParams();
-  formData.append('form-name', 'orders'); // 'orders' 必須對應到 HTML 中的 form name
-  formData.append('merchantTradeNo', orderData.MerchantTradeNo);
-  formData.append('totalAmount', orderData.TotalAmount);
-  formData.append('itemName', orderData.ItemName);
-  formData.append('tradeStatus', 'PENDING'); // 先將訂單狀態標示為「等待付款」
-
-  try {
-    // 將表單資料 POST 到我們自己的網站，Netlify 會自動攔截並儲存
-    await fetch(process.env.URL || 'http://localhost:8888', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData.toString(),
-    });
-    console.log('訂單已成功儲存至 Netlify Forms。');
-  } catch (error) {
-    console.error('儲存訂單至 Netlify Forms 時發生錯誤:', error);
-    // 即使儲存失敗，我們仍然繼續付款流程，確保使用者可以付款
-  }
+    const formData = new URLSearchParams();
+    formData.append('form-name', 'orders');
+    formData.append('merchantTradeNo', orderData.MerchantTradeNo);
+    formData.append('totalAmount', orderData.TotalAmount);
+    formData.append('itemName', orderData.ItemName);
+    formData.append('tradeStatus', 'PENDING');
+    try {
+        await fetch(process.env.URL || 'http://localhost:8888', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString(),
+        });
+        console.log('訂單已成功儲存至 Netlify Forms。');
+    } catch (error) {
+        console.error('儲存訂單至 Netlify Forms 時發生錯誤:', error);
+    }
 }
 
 
@@ -47,7 +40,6 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    // ... (這部分準備訂單參數的程式碼不變) ...
     const cartData = JSON.parse(event.body);
     const merchantID = process.env.ECPAY_MERCHANT_ID;
     const hashKey = process.env.ECPAY_HASH_KEY;
@@ -56,7 +48,17 @@ exports.handler = async function(event, context) {
     const merchantTradeNo = `BAMBOO${Date.now()}`;
     const totalAmount = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const itemName = cartData.map(item => `${item.name} x ${item.quantity}`).join('#');
-    const tradeDate = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/-/g, '/');
+
+    // ▼▼▼ 我們用最穩固、最安全的方式來產生日期 ▼▼▼
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const tradeDate = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+    // ▲▲▲ 我們用最穩固、最安全的方式來產生日期 ▲▲▲
 
     let orderParams = {
       MerchantID: merchantID,
@@ -67,12 +69,13 @@ exports.handler = async function(event, context) {
       TradeDesc: '竹意軒咖啡工坊線上訂單',
       ItemName: itemName,
       ReturnURL: returnURL,
-      OrderResultURL: `/order-complete.html`,
+      OrderResultURL: '/order-complete.html',
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
 
-    // ▼▼▼ 在產生加密碼之前，先執行儲存訂單的動作 ▼▼▼
+    // 我們的邏輯是先儲存訂單到 Netlify Forms，再產生加密碼
+    // (如果未來要換成 n8n+Google Sheets，也是在這個位置)
     await saveOrderToNetlifyForms(orderParams);
 
     const checkMacValue = generateCheckMacValue(orderParams, hashKey, hashIV);
@@ -87,7 +90,7 @@ exports.handler = async function(event, context) {
     };
 
   } catch (error) {
-    console.error('後端 Function 出錯:', error);
+    console.error('create-ecpay-order function 發生錯誤:', error);
     return { statusCode: 500, body: JSON.stringify({ error: `伺服器內部錯誤: ${error.message}` }) };
   }
 };
