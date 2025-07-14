@@ -52,7 +52,7 @@ exports.handler = async function(event, context) {
     const merchantID = process.env.ECPAY_MERCHANT_ID;
     const hashKey = process.env.ECPAY_HASH_KEY;
     const hashIV = process.env.ECPAY_HASH_IV;
-    const returnURL = process.env.URL || 'http://localhost:8888';
+    const returnURL = `${process.env.URL}/.netlify/functions/ecpay-return`;
     const merchantTradeNo = `BAMBOO${Date.now()}`;
     const totalAmount = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const itemName = cartData.map(item => `${item.name} x ${item.quantity}`).join('#');
