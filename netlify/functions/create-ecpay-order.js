@@ -1,10 +1,10 @@
 // 檔案路徑: netlify/functions/create-ecpay-order.js
-// 最終修正 - 使用 toLocaleString 校正交易時間的時區
+// 最終版本 - 移除 Netlify Forms，改為呼叫 n8n 建立訂單
 
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 
-// ... generateCheckMacValue 和 saveOrderToNetlifyForms 函式維持不變 ...
+// ... generateCheckMacValue 函式維持不變 ...
 function generateCheckMacValue(params, hashKey, hashIV) {
     const sortedKeys = Object.keys(params).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     let checkString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
@@ -13,24 +13,6 @@ function generateCheckMacValue(params, hashKey, hashIV) {
     encodedString = encodedString.replace(/'/g, "%27").replace(/~/g, "%7e").replace(/%20/g, "+");
     const hash = crypto.createHash('sha256').update(encodedString).digest('hex');
     return hash.toUpperCase();
-}
-async function saveOrderToNetlifyForms(orderData) {
-    const formData = new URLSearchParams();
-    formData.append('form-name', 'orders');
-    formData.append('merchantTradeNo', orderData.MerchantTradeNo);
-    formData.append('totalAmount', orderData.TotalAmount);
-    formData.append('itemName', orderData.ItemName);
-    formData.append('tradeStatus', 'PENDING');
-    try {
-        await fetch(process.env.URL || 'http://localhost:8888', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString(),
-        });
-        console.log('訂單已成功儲存至 Netlify Forms。');
-    } catch (error) {
-        console.error('儲存訂單至 Netlify Forms 時發生錯誤:', error);
-    }
 }
 
 
@@ -48,8 +30,6 @@ exports.handler = async function(event, context) {
     const merchantTradeNo = `BAMBOO${Date.now()}`;
     const totalAmount = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const itemName = cartData.map(item => `${item.name} x ${item.quantity}`).join('#');
-
-    // ▼▼▼ 將手動產生的日期區塊，替換成下面這一行 ▼▼▼
     const tradeDate = new Date().toLocaleString('zh-TW', {
         timeZone: 'Asia/Taipei',
         hour12: false,
@@ -60,7 +40,6 @@ exports.handler = async function(event, context) {
         minute: '2-digit',
         second: '2-digit'
     }).replace(/-/g, '/');
-    // ▲▲▲ 這能確保無論伺服器在哪，都能產生出「台灣時區」的正確時間格式 ▲▲▲
 
     let orderParams = {
       MerchantID: merchantID,
@@ -72,13 +51,29 @@ exports.handler = async function(event, context) {
       ItemName: itemName,
       ReturnURL: returnURL,
       OrderResultURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
-  ClientBackURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
+      ClientBackURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
 
-    console.log("準備發送到綠界的參數:", JSON.stringify(orderParams, null, 2));
-    await saveOrderToNetlifyForms(orderParams);
+    // ▼▼▼ 我們將呼叫 Netlify Forms 的邏輯，替換成呼叫 n8n Workflow A ▼▼▼
+    try {
+      const n8n_create_order_webhook = 'https://BambooLee-n8n-free.hf.space/webhook/c188e2c1-6492-40de-9cf6-9e9d865c9fb5';
+      await fetch(n8n_create_order_webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchantTradeNo: merchantTradeNo,
+          itemName: itemName,
+          totalAmount: totalAmount,
+          tradeDate: tradeDate
+        }),
+      });
+      console.log('已觸發 n8n「建立訂單」工作流。');
+    } catch (n8nError) {
+      console.error('觸發 n8n「建立訂單」工作流時發生錯誤:', n8nError);
+    }
+    // ▲▲▲ 替換完成 ▲▲▲
 
     const checkMacValue = generateCheckMacValue(orderParams, hashKey, hashIV);
 
