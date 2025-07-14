@@ -23,48 +23,51 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    // 1. 從綠界回傳的請求中解析出訂單資料
+      // 1. 從綠界回傳的請求中解析出訂單資料
     const ecpayResponse = new URLSearchParams(event.body);
     const responseData = Object.fromEntries(ecpayResponse.entries());
 
-    // 2. 安全驗證：重新計算一次 CheckMacValue，比對是否與綠界送來的一致
+    // 2. 安全驗證
     const hashKey = process.env.ECPAY_HASH_KEY;
     const hashIV = process.env.ECPAY_HASH_IV;
     const receivedMacValue = responseData.CheckMacValue;
-
-    // 2.1 準備要驗證的資料，注意要刪除 CheckMacValue 本身
     const dataToVerify = { ...responseData };
     delete dataToVerify.CheckMacValue;
     const calculatedMacValue = generateCheckMacValue(dataToVerify, hashKey, hashIV);
 
-    // 2.2 比對驗證碼
     if (receivedMacValue !== calculatedMacValue) {
-      console.error('CheckMacValue 驗證失敗！', { received: receivedMacValue, calculated: calculatedMacValue });
+      console.error('CheckMacValue 驗證失敗！');
       return { statusCode: 400, body: 'Invalid CheckMacValue' };
     }
 
-    // 3. 確認付款狀態，並觸發 n8n
-    // RtnCode=1 代表交易成功
+    // 3. 確認付款狀態
     if (responseData.RtnCode === '1') {
-      console.log(`訂單 ${responseData.MerchantTradeNo} 付款成功`);
+      console.log(`[路標 1] 訂單 ${responseData.MerchantTradeNo} 付款成功，準備呼叫 n8n。`);
+      console.log(`[路標 2] 目標 n8n URL: ${N8N_UPDATE_ORDER_WEBHOOK}`);
 
-      // 3.1 呼叫 n8n Webhook，去更新 Google Sheet 並發送通知
-      await fetch(N8N_UPDATE_ORDER_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: 'PAID',
-          orderData: responseData
-        }),
-      });
+      // 為了更精確地捕捉錯誤，我們在 fetch 外面包一層獨立的 try...catch
+      try {
+        await fetch(N8N_UPDATE_ORDER_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'PAID',
+            orderData: responseData
+          }),
+        });
+        console.log('[路標 3] n8n Webhook 呼叫已發送，過程中未拋出錯誤。');
+
+      } catch (fetchError) {
+        console.error('[錯誤] 呼叫 n8n Webhook 時捕捉到錯誤:', fetchError);
+      }
     }
 
     // 4. 將使用者導向感謝頁面
-    // 我們在網址上附上訂單編號，讓感謝頁面可以顯示
+    console.log('[路標 4] 準備將使用者導向感謝頁面...');
     const thankYouUrl = `/order-complete.html?orderId=${responseData.MerchantTradeNo}`;
 
     return {
-      statusCode: 302, // 302 是「暫時重導向」的 HTTP 狀態碼
+      statusCode: 302,
       headers: {
         Location: thankYouUrl,
       },
