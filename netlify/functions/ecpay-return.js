@@ -26,6 +26,7 @@ exports.handler = async function(event, context) {
       // 1. 從綠界回傳的請求中解析出訂單資料
     const ecpayResponse = new URLSearchParams(event.body);
     const responseData = Object.fromEntries(ecpayResponse.entries());
+    console.log("從綠界收到的完整回傳資料:", JSON.stringify(responseData, null, 2));
 
     // 2. 安全驗證
     const hashKey = process.env.ECPAY_HASH_KEY;
