@@ -67,7 +67,7 @@ exports.handler = async function(event, context) {
       TradeDesc: '竹意軒咖啡工坊線上訂單',
       ItemName: itemName,
       ReturnURL: returnURL,
-      OrderResultURL: `${process.env.URL}/order-complete.html`,
+      OrderResultURL: `/order-complete.html`,
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
