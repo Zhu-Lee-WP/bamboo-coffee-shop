@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const fetch = require('node-fetch');
 
 // ▼▼▼ 請將這裡的網址，換成您在步驟二中，從 n8n 取得的 Webhook 測試網址 ▼▼▼
-const N8N_UPDATE_ORDER_WEBHOOK = 'https://BambooLee-n8n-free.hf.space/webhook-test/ef6119b4-5190-43f0-944d-ff29f0f3e9d7';
+const N8N_UPDATE_ORDER_WEBHOOK = 'https://BambooLee-n8n-free.hf.space/webhook/ef6119b4-5190-43f0-944d-ff29f0f3e9d7';
 // ▲▲▲ 請將這裡的網址，換成您在步驟二中，從 n8n 取得的 Webhook 測試網址 ▲▲▲
 
 // ... generateCheckMacValue 函式與另一支 function 相同 ...
