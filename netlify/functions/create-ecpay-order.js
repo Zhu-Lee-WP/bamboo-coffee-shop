@@ -70,6 +70,7 @@ exports.handler = async function(event, context) {
       ItemName: itemName,
       ReturnURL: `${process.env.URL}/.netlify/functions/ecpay-return`,
       OrderResultURL: `${process.env.URL}/order-complete.html`,
+      ClientBackURL: `${process.env.URL}/order-complete.html`,
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
