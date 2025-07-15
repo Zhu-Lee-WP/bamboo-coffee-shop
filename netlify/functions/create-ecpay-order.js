@@ -68,6 +68,7 @@ exports.handler = async function(event, context) {
   orderParams.GoodsName = '竹意軒咖啡工坊商品一批';
   orderParams.GoodsAmount = totalAmount;
   orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`;
+  orderParams.ChoosePayment = 'CVS';
 
   // 現在我們可以安全地把門市資訊加進來了
   orderParams.CVSStoreID = storeInfo.id;
