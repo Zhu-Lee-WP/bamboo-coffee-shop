@@ -820,7 +820,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     <script>
     // 使用 DOMContentLoaded 確保在操作DOM之前，HTML已完全載入
     document.addEventListener('DOMContentLoaded', () => {
-        
+
         // --- 1. 獲取所有需要的 HTML 元素 ---
         const cartSidebar = document.getElementById('cart-sidebar');
         const openCartBtn = document.getElementById('open-cart-btn');
@@ -834,8 +834,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selectStoreBtn = document.getElementById('select-store-btn');
         const storeInfoDiv = document.getElementById('store-info');
 
-        // --- 2. 初始化購物車 ---
+        // --- 2. 初始化購物車和物流選擇 ---
         let cart = JSON.parse(localStorage.getItem('bamboo_cart')) || [];
+        // ▼▼▼ 我們將 selectedLogistics 變數移到這裡，讓整個 script 都能存取它 ▼▼▼
+        let selectedLogistics = localStorage.getItem('bamboo_logistics_choice') || 'HOME';
 
         // --- 3. 核心功能函式 ---
         function addToCart(product) {
@@ -846,26 +848,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cart.push({ ...product, quantity: 1 });
             }
             alert(`「${product.name}」已加入購物車！`);
-            let selectedLogistics = 'HOME'; // 預設為宅配
-
-        function handleLogisticsChange() {
-            selectedLogistics = document.querySelector('input[name="logistics"]:checked').value;
-            if (selectedLogistics === 'CVS') {
-                selectStoreBtn.classList.remove('hidden'); // 顯示選擇門市按鈕
-            } else {
-                selectStoreBtn.classList.add('hidden'); // 隱藏選擇門市按鈕
-                storeInfoDiv.innerHTML = ''; // 清空已選門市資訊
-            }
-            // 將選擇的物流方式存到 localStorage
-            localStorage.setItem('bamboo_logistics_choice', selectedLogistics);
-        }
-
-        logisticsRadios.forEach(radio => {
-            radio.addEventListener('change', handleLogisticsChange);
-        });
-
-        // 初始載入時，也執行一次，確保狀態正確
-        handleLogisticsChange();
             updateCart();
         }
 
@@ -873,13 +855,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             cart = cart.filter(item => item.id !== productId);
             updateCart();
         }
-        
+
         function updateCart() {
             renderCartItems();
             renderCartTotal();
             saveCart();
         }
-        
+
         function saveCart() {
             localStorage.setItem('bamboo_cart', JSON.stringify(cart));
         }
@@ -907,7 +889,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
                 cartItemsContainer.appendChild(itemEl);
             });
-            
+
             if (totalItems > 0) {
                 cartCountEl.textContent = totalItems;
                 cartCountEl.classList.remove('hidden');
@@ -915,10 +897,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cartCountEl.classList.add('hidden');
             }
         }
-        
+
         function renderCartTotal() {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             cartTotalEl.textContent = `NT$ ${total}`;
+        }
+        
+        // ▼▼▼ 我們將物流處理的函式獨立出來，放在這裡 ▼▼▼
+        function handleLogisticsChange() {
+            selectedLogistics = document.querySelector('input[name="logistics"]:checked').value;
+            if (selectedLogistics === 'CVS') {
+                selectStoreBtn.classList.remove('hidden');
+            } else {
+                selectStoreBtn.classList.add('hidden');
+                storeInfoDiv.innerHTML = '';
+            }
+            localStorage.setItem('bamboo_logistics_choice', selectedLogistics);
         }
 
         // --- 4. 設定事件監聽器 ---
@@ -928,6 +922,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         closeCartBtn.addEventListener('click', () => {
             cartSidebar.classList.add('translate-x-full');
+        });
+        
+        // 物流選項的監聽器
+        logisticsRadios.forEach(radio => {
+            radio.addEventListener('change', handleLogisticsChange);
         });
 
         addToCartButtons.forEach(button => {
@@ -953,7 +952,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 addToCart(product);
             });
         });
-        
+
         cartItemsContainer.addEventListener('click', (event) => {
             if (event.target && event.target.classList.contains('remove-from-cart-btn')) {
                 const productId = event.target.dataset.id;
@@ -961,85 +960,73 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // ==========================================================
-        //         這裡是我們更新的「前往結帳」按鈕監聽器
-        // ==========================================================
-        checkoutBtn.addEventListener('click', async () => { // 注意這裡加上了 async
+        checkoutBtn.addEventListener('click', async () => {
             if (cart.length === 0) {
                 alert('您的購物車是空的！');
                 return;
             }
 
-            // 顯示一個處理中的提示
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = '訂單處理中...';
 
-            // 在 checkoutBtn 的 addEventListener 中，找到 try { ... } 區塊並替換成以下內容
+            try {
+                const response = await fetch('/.netlify/functions/create-ecpay-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cart: cart,
+                        logisticsType: selectedLogistics // 現在這裡可以正確找到 selectedLogistics 了
+                    }),
+                });
 
-try {
-    // ... (fetch 的部分保持不變) ...
-    const response = await fetch('/.netlify/functions/create-ecpay-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-                    cart: cart,
-                    logisticsType: selectedLogistics // 把剛才存的物流選擇一起送出去
-                }),
-    });
+                if (!response.ok) {
+                    throw new Error(`伺服器回應錯誤: ${response.status}`);
+                }
 
-    if (!response.ok) {
-        throw new Error(`伺服器回應錯誤: ${response.status}`);
-    }
+                const result = await response.json();
+                
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut';
+                form.style.display = 'none';
 
-    const result = await response.json();
-    console.log('前端收到來自後端的回應:', result);
+                for (const key in result.orderData) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = result.orderData[key];
+                    form.appendChild(input);
+                }
 
-    // ==========================================================
-    //         這是新的部分：動態建立表單並提交
-    // ==========================================================
+                const checkMacValueInput = document.createElement('input');
+                checkMacValueInput.type = 'hidden';
+                checkMacValueInput.name = 'CheckMacValue';
+                checkMacValueInput.value = result.checkMacValue;
+                form.appendChild(checkMacValueInput);
 
-    // 1. 建立一個 form 元素
-    const form = document.createElement('form');
-    form.method = 'POST';
-    // 注意：這裡我們使用綠界的「測試」環境網址
-    form.action = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut'; 
-    form.style.display = 'none'; // 讓表單在畫面上不可見
-
-    // 2. 將後端回傳的訂單資料，一一建立成隱藏的 input 欄位
-    for (const key in result.orderData) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = result.orderData[key];
-        form.appendChild(input);
-    }
-
-    // 3. 建立 CheckMacValue 的隱藏 input 欄位
-    const checkMacValueInput = document.createElement('input');
-    checkMacValueInput.type = 'hidden';
-    checkMacValueInput.name = 'CheckMacValue';
-    checkMacValueInput.value = result.checkMacValue;
-    form.appendChild(checkMacValueInput);
-
-    // 4. 將表單加到網頁中，並自動送出
-    document.body.appendChild(form);
-    form.submit();
+                document.body.appendChild(form);
+                form.submit();
 
             } catch (error) {
                 console.error('呼叫後端 Function 時發生錯誤:', error);
                 alert('訂單建立失敗，請查看瀏覽器控制台的錯誤訊息。');
             } finally {
-                // 無論成功或失敗，都恢復按鈕的狀態
                 checkoutBtn.disabled = false;
                 checkoutBtn.textContent = '前往結帳';
             }
         });
 
         // --- 5. 初始載入 ---
-        updateCart();
+        // 根據儲存的選擇，設定 radio button 的初始狀態
+        const savedLogistics = localStorage.getItem('bamboo_logistics_choice');
+        if (savedLogistics) {
+            document.querySelector(`input[name="logistics"][value="${savedLogistics}"]`).checked = true;
+        }
+        
+        handleLogisticsChange(); // 確保 UI 正確
+        updateCart(); // 更新購物車
     });
-    </script>
-    </script>
+</script>
     <form name="orders" netlify netlify-honeypot="bot-field" hidden>
   <input type="hidden" name="form-name" value="orders" />
   <p class="hidden">
