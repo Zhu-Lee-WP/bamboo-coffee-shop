@@ -22,7 +22,7 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const { cart, logisticsType } = JSON.parse(event.body);
+    const { cart, logisticsType, storeInfo } = JSON.parse(event.body);
     const merchantID = process.env.ECPAY_MERCHANT_ID;
     const hashKey = process.env.ECPAY_HASH_KEY;
     const hashIV = process.env.ECPAY_HASH_IV;
@@ -58,17 +58,20 @@ exports.handler = async function(event, context) {
     };
     // ▼▼▼ 這是新加入的，用來處理物流參數的核心邏輯 ▼▼▼
     if (logisticsType === 'CVS') {
-  // 因為我們已經打開了 NeedExtraPaidInfo 的總開關，
-  // 所以現在可以加入所有物流擴充規格允許的參數了。
+  // 檢查是否有門市資訊，若無則回傳錯誤，避免程式崩潰
+  if (!storeInfo || !storeInfo.id) {
+      return { statusCode: 400, body: JSON.stringify({ error: '未選擇超商取貨門市。' }) };
+  }
+
   orderParams.LogisticsType = 'CVS';
   orderParams.LogisticsSubType = 'UNIMART';
   orderParams.GoodsName = '竹意軒咖啡工坊商品一批';
   orderParams.GoodsAmount = totalAmount;
   orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`;
 
-  // 根據文件，IsCollection 和 ClientReplyURL 確實不屬於這裡，保持註解。
-  // orderParams.IsCollection = 'Y';
-  // orderParams.ClientReplyURL = `${process.env.URL}/map-return.html`;
+  // 現在我們可以安全地把門市資訊加進來了
+  orderParams.CVSStoreID = storeInfo.id;
+  orderParams.CVSStoreName = storeInfo.name;
 }
     // ▲▲▲ 這是新加入的 ▲▲▲
 

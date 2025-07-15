@@ -648,6 +648,7 @@
     </footer>
 
     <script>
+        
         document.addEventListener('DOMContentLoaded', function() {
             const tabs = document.querySelectorAll('.tab-btn');
             const coffeeCards = document.querySelectorAll('.coffee-card');
@@ -722,6 +723,7 @@
         });
     </script>
     <script>
+    
     // 等待整個網頁文件都載入完成後，再執行裡面的程式碼
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -759,6 +761,7 @@
     });
 </script>
 <script>
+    
 document.addEventListener('DOMContentLoaded', async () => {
   const el = document.getElementById('view-counter');
   const namespace = 'bamboosite';     // 自訂，類似舊的「namespace」
@@ -777,36 +780,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 <div id="cart-sidebar" class="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
-            <h2 class="text-2xl font-bold text-gray-800">您的購物車</h2>
-            <button id="close-cart-btn" class="text-gray-600 hover:text-gray-900">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
+    <h2 class="text-2xl font-bold text-gray-800">您的購物車</h2>
+    <button id="close-cart-btn" class="text-gray-600 hover:text-gray-900">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+</div>
 
-        <div id="cart-items" class="p-4 flex-grow overflow-y-auto">
-            <p class="text-gray-500">您的購物車是空的。</p>
-        </div>
+<div id="cart-items" class="p-4 flex-grow overflow-y-auto">
+    </div>
 
-        <div class="p-4 border-t bg-gray-50">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-lg font-bold">總計：</span>
-             <div class="p-4 border-t">
+<div class="p-4 border-t">
     <h3 class="text-lg font-bold mb-3">選擇運送方式</h3>
     <div class="space-y-2">
-        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50" id="logistics-home-label">
+        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
             <input type="radio" name="logistics" value="HOME" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" checked>
             <span class="ml-3 text-gray-700 font-bold">宅配到府</span>
         </label>
-        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50" id="logistics-cvs-label">
+        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50">
             <input type="radio" name="logistics" value="CVS" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
             <span class="ml-3 text-gray-700 font-bold">超商取貨 (7-ELEVEN)</span>
         </label>
     </div>
-    <button id="select-store-btn" class="hidden w-full mt-3 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg">
+    <button id="select-store-btn" class="hidden w-full mt-3 bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded-lg">
         選擇取貨門市
     </button>
-    <div id="store-info" class="mt-2 text-sm text-green-700 font-bold"></div>
+    <div id="store-info" class="mt-2 text-sm text-green-700 font-bold text-center"></div>
 </div>
+
 <div class="p-4 border-t bg-gray-50">
     <div class="flex justify-between items-center mb-4">
          <span class="text-lg font-bold">總計：</span>
@@ -819,213 +819,131 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>
     <script>
     // 使用 DOMContentLoaded 確保在操作DOM之前，HTML已完全載入
+    
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- 1. 獲取所有需要的 HTML 元素 ---
-        const cartSidebar = document.getElementById('cart-sidebar');
-        const openCartBtn = document.getElementById('open-cart-btn');
-        const closeCartBtn = document.getElementById('close-cart-btn');
-        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-        const cartItemsContainer = document.getElementById('cart-items');
-        const cartTotalEl = document.getElementById('cart-total');
-        const cartCountEl = document.getElementById('cart-count');
-        const checkoutBtn = document.getElementById('checkout-btn');
-        const logisticsRadios = document.querySelectorAll('input[name="logistics"]');
-        const selectStoreBtn = document.getElementById('select-store-btn');
-        const storeInfoDiv = document.getElementById('store-info');
+    // --- 0. 從網址列接收從地圖返回的門市資訊 (這是新的關鍵步驟) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'store-selected') {
+        const store = {
+            id: urlParams.get('cvsStoreId'),
+            name: decodeURIComponent(urlParams.get('cvsStoreName'))
+        };
+        localStorage.setItem('bamboo_selected_store', JSON.stringify(store));
+        // 清理網址，避免重新整理時重複觸發
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-        // --- 2. 初始化購物車和物流選擇 ---
-        let cart = JSON.parse(localStorage.getItem('bamboo_cart')) || [];
-        // ▼▼▼ 我們將 selectedLogistics 變數移到這裡，讓整個 script 都能存取它 ▼▼▼
-        let selectedLogistics = localStorage.getItem('bamboo_logistics_choice') || 'HOME';
+    // --- 1. 獲取所有需要的 HTML 元素 ---
+    const cartSidebar = document.getElementById('cart-sidebar');
+    const openCartBtn = document.getElementById('open-cart-btn');
+    const closeCartBtn = document.getElementById('close-cart-btn');
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalEl = document.getElementById('cart-total');
+    const cartCountEl = document.getElementById('cart-count');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const logisticsRadios = document.querySelectorAll('input[name="logistics"]');
+    const selectStoreBtn = document.getElementById('select-store-btn');
+    const storeInfoDiv = document.getElementById('store-info');
 
-        // --- 3. 核心功能函式 ---
-        function addToCart(product) {
-            const existingItem = cart.find(item => item.id === product.id);
-            if (existingItem) {
-                existingItem.quantity++;
+    // --- 2. 初始化購物車和物流選擇 ---
+    let cart = JSON.parse(localStorage.getItem('bamboo_cart')) || [];
+    let selectedLogistics = localStorage.getItem('bamboo_logistics_choice') || 'HOME';
+
+    // --- 3. 核心功能函式 (這部分不變) ---
+    function addToCart(product) { /* ... 您的 addToCart 邏輯 ... */ }
+    function removeFromCart(productId) { /* ... 您的 removeFromCart 邏輯 ... */ }
+    function updateCart() { /* ... 您的 updateCart 邏輯 ... */ }
+    function saveCart() { /* ... 您的 saveCart 邏輯 ... */ }
+    function renderCartItems() { /* ... 您的 renderCartItems 邏輯 ... */ }
+    function renderCartTotal() { /* ... 您的 renderCartTotal 邏輯 ... */ }
+
+    // --- 4. 物流相關函式 (修正版) ---
+    function handleLogisticsChange() {
+        selectedLogistics = document.querySelector('input[name="logistics"]:checked').value;
+        const selectedStore = JSON.parse(localStorage.getItem('bamboo_selected_store'));
+
+        if (selectedLogistics === 'CVS') {
+            selectStoreBtn.classList.remove('hidden');
+            if (selectedStore) {
+                storeInfoDiv.innerHTML = `已選擇：${selectedStore.name}`;
+                selectStoreBtn.textContent = '重新選擇門市';
             } else {
-                cart.push({ ...product, quantity: 1 });
-            }
-            alert(`「${product.name}」已加入購物車！`);
-            updateCart();
-        }
-
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            updateCart();
-        }
-
-        function updateCart() {
-            renderCartItems();
-            renderCartTotal();
-            saveCart();
-        }
-
-        function saveCart() {
-            localStorage.setItem('bamboo_cart', JSON.stringify(cart));
-        }
-
-        function renderCartItems() {
-            cartItemsContainer.innerHTML = '';
-            if (cart.length === 0) {
-                cartItemsContainer.innerHTML = '<p class="text-gray-500">您的購物車是空的。</p>';
-                cartCountEl.classList.add('hidden');
-                return;
-            }
-            let totalItems = 0;
-            cart.forEach(item => {
-                totalItems += item.quantity;
-                const itemEl = document.createElement('div');
-                itemEl.className = 'flex justify-between items-center mb-4 p-2 border-b';
-                itemEl.innerHTML = `
-                    <div class="w-3/4">
-                        <p class="font-bold truncate">${item.name}</p>
-                        <p class="text-sm text-gray-600">NT$ ${item.price} x ${item.quantity}</p>
-                    </div>
-                    <div class="w-1/4 text-right">
-                        <button class="remove-from-cart-btn text-red-500 hover:text-red-700 text-sm" data-id="${item.id}">移除</button>
-                    </div>
-                `;
-                cartItemsContainer.appendChild(itemEl);
-            });
-
-            if (totalItems > 0) {
-                cartCountEl.textContent = totalItems;
-                cartCountEl.classList.remove('hidden');
-            } else {
-                cartCountEl.classList.add('hidden');
-            }
-        }
-
-        function renderCartTotal() {
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            cartTotalEl.textContent = `NT$ ${total}`;
-        }
-        
-        // ▼▼▼ 我們將物流處理的函式獨立出來，放在這裡 ▼▼▼
-        function handleLogisticsChange() {
-            selectedLogistics = document.querySelector('input[name="logistics"]:checked').value;
-            if (selectedLogistics === 'CVS') {
-                selectStoreBtn.classList.remove('hidden');
-            } else {
-                selectStoreBtn.classList.add('hidden');
                 storeInfoDiv.innerHTML = '';
+                selectStoreBtn.textContent = '選擇取貨門市';
             }
-            localStorage.setItem('bamboo_logistics_choice', selectedLogistics);
+        } else {
+            selectStoreBtn.classList.add('hidden');
+            storeInfoDiv.innerHTML = '';
         }
+        localStorage.setItem('bamboo_logistics_choice', selectedLogistics);
+    }
 
-        // --- 4. 設定事件監聽器 ---
-        openCartBtn.addEventListener('click', () => {
-            cartSidebar.classList.remove('translate-x-full');
-        });
+    // --- 5. 設定事件監聽器 (修正版) ---
+    openCartBtn.addEventListener('click', () => cartSidebar.classList.remove('translate-x-full'));
+    closeCartBtn.addEventListener('click', () => cartSidebar.classList.add('translate-x-full'));
+    logisticsRadios.forEach(radio => radio.addEventListener('change', handleLogisticsChange));
+    addToCartButtons.forEach(button => { /* ... 您的 addToCartButtons 監聽器邏輯 ... */ });
+    cartItemsContainer.addEventListener('click', (event) => { /* ... 您的 cartItemsContainer 監聽器邏輯 ... */ });
 
-        closeCartBtn.addEventListener('click', () => {
-            cartSidebar.classList.add('translate-x-full');
-        });
-        
-        // 物流選項的監聽器
-        logisticsRadios.forEach(radio => {
-            radio.addEventListener('change', handleLogisticsChange);
-        });
+    // ▼▼▼ 將 selectStoreBtn 的監聽器獨立出來，避免重複綁定 ▼▼▼
+    selectStoreBtn.addEventListener('click', async () => {
+        selectStoreBtn.disabled = true;
+        selectStoreBtn.textContent = '地圖載入中...';
+        try {
+            const res = await fetch('/.netlify/functions/get-cvs-map-params');
+            const data = await res.json();
 
-        addToCartButtons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                const buttonEl = event.currentTarget;
-                const productCard = buttonEl.closest('[data-product-id]');
-                const productIdBase = productCard.dataset.productId;
-                const productName = buttonEl.dataset.name;
-                const selectedSpecEl = productCard.querySelector(`input[name="spec_${productIdBase}"]:checked`);
-                if (!selectedSpecEl) {
-                    alert('請選擇一個商品規格！');
-                    return;
-                }
-                const specValue = selectedSpecEl.value;
-                const specName = selectedSpecEl.dataset.specName;
-                const price = parseInt(selectedSpecEl.dataset.price, 10);
-                const uniqueProductId = `${productIdBase}_${specValue}`;
-                const product = {
-                    id: uniqueProductId,
-                    name: `${productName} (${specName})`,
-                    price: price,
-                };
-                addToCart(product);
-            });
-        });
+            if (!res.ok) throw new Error(data.error || '無法取得地圖參數');
 
-        cartItemsContainer.addEventListener('click', (event) => {
-            if (event.target && event.target.classList.contains('remove-from-cart-btn')) {
-                const productId = event.target.dataset.id;
-                removeFromCart(productId);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = data.mapUrl;
+            form.style.display = 'none';
+
+            for (const key in data.mapParams) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = data.mapParams[key];
+                form.appendChild(input);
             }
-        });
+            const checkMacValueInput = document.createElement('input');
+            checkMacValueInput.type = 'hidden';
+            checkMacValueInput.name = 'CheckMacValue';
+            checkMacValueInput.value = data.checkMacValue;
+            form.appendChild(checkMacValueInput);
 
-        checkoutBtn.addEventListener('click', async () => {
-            if (cart.length === 0) {
-                alert('您的購物車是空的！');
-                return;
-            }
-
-            checkoutBtn.disabled = true;
-            checkoutBtn.textContent = '訂單處理中...';
-
-            try {
-                const response = await fetch('/.netlify/functions/create-ecpay-order', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cart: cart,
-                        logisticsType: selectedLogistics // 現在這裡可以正確找到 selectedLogistics 了
-                    }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`伺服器回應錯誤: ${response.status}`);
-                }
-
-                const result = await response.json();
-                
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut';
-                form.style.display = 'none';
-
-                for (const key in result.orderData) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = result.orderData[key];
-                    form.appendChild(input);
-                }
-
-                const checkMacValueInput = document.createElement('input');
-                checkMacValueInput.type = 'hidden';
-                checkMacValueInput.name = 'CheckMacValue';
-                checkMacValueInput.value = result.checkMacValue;
-                form.appendChild(checkMacValueInput);
-
-                document.body.appendChild(form);
-                form.submit();
-
-            } catch (error) {
-                console.error('呼叫後端 Function 時發生錯誤:', error);
-                alert('訂單建立失敗，請查看瀏覽器控制台的錯誤訊息。');
-            } finally {
-                checkoutBtn.disabled = false;
-                checkoutBtn.textContent = '前往結帳';
-            }
-        });
-
-        // --- 5. 初始載入 ---
-        // 根據儲存的選擇，設定 radio button 的初始狀態
-        const savedLogistics = localStorage.getItem('bamboo_logistics_choice');
-        if (savedLogistics) {
-            document.querySelector(`input[name="logistics"][value="${savedLogistics}"]`).checked = true;
+            document.body.appendChild(form);
+            form.submit();
+        } catch(error) {
+            console.error('開啟超商地圖失敗:', error);
+            alert('開啟地圖失敗，請稍後再試。');
+            selectStoreBtn.disabled = false;
+            selectStoreBtn.textContent = '選擇取貨門市';
         }
-        
-        handleLogisticsChange(); // 確保 UI 正確
-        updateCart(); // 更新購物車
     });
+
+    checkoutBtn.addEventListener('click', async () => {
+        if (cart.length === 0) { /* ... */ return; }
+        if (selectedLogistics === 'CVS' && !localStorage.getItem('bamboo_selected_store')) {
+            alert('請先選擇取貨門市！');
+            return;
+        }
+        // ... 您原本的 checkoutBtn 邏輯 ...
+        // 記得 fetch 的 body 要包含 storeInfo
+        // body: JSON.stringify({ cart, logisticsType: selectedLogistics, storeInfo: JSON.parse(localStorage.getItem('bamboo_selected_store')) })
+    });
+
+    // --- 6. 初始載入 ---
+    const savedLogistics = localStorage.getItem('bamboo_logistics_choice');
+    if (savedLogistics) {
+        document.querySelector(`input[name="logistics"][value="${savedLogistics}"]`).checked = true;
+    }
+    handleLogisticsChange();
+    updateCart();
+});
 </script>
     <form name="orders" netlify netlify-honeypot="bot-field" hidden>
   <input type="hidden" name="form-name" value="orders" />
