@@ -30,8 +30,8 @@ exports.handler = async function(event, context) {
       GoodsAmount: parseInt(paymentData.TradeAmt, 10),
       CollectionAmount: parseInt(paymentData.TradeAmt, 10), // 如果是貨到付款，這裡要跟 GoodsAmount 一樣
       IsCollection: 'Y', // Y=貨到付款, N=純取貨
-      GoodsName: '竹意軒咖啡工坊商品', // 商品名稱
-      SenderName: '竹意軒的咖啡工坊', // 您的姓名/公司名
+      GoodsName: '竹意軒咖啡', // 商品名稱
+      SenderName: '竹意軒', // 您的姓名/公司名
       SenderPhone: '0912345678', // 您的電話
       ReceiverName: '顧客', // 在此階段通常是固定值，或從會員系統來
       ReceiverPhone: '0987654321', // 同上
