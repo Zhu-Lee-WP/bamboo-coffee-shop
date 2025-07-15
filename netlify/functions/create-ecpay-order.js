@@ -22,6 +22,7 @@ exports.handler = async function(event, context) {
   }
 
   try {
+    // 現在我們也接收 storeInfo
     const { cart, logisticsType, storeInfo } = JSON.parse(event.body);
     const merchantID = process.env.ECPAY_MERCHANT_ID;
     const hashKey = process.env.ECPAY_HASH_KEY;
@@ -31,16 +32,11 @@ exports.handler = async function(event, context) {
     const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const itemName = cart.map(item => `${item.name} x ${item.quantity}`).join('#');
     const tradeDate = new Date().toLocaleString('zh-TW', {
-        timeZone: 'Asia/Taipei',
-        hour12: false,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        timeZone: 'Asia/Taipei', hour12: false, year: 'numeric', month: '2-digit',
+        day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
     }).replace(/-/g, '/');
 
+    // ▼▼▼ 這是一個全新的、簡化的 orderParams 物件 ▼▼▼
     let orderParams = {
       MerchantID: merchantID,
       MerchantTradeNo: merchantTradeNo,
@@ -50,50 +46,17 @@ exports.handler = async function(event, context) {
       TradeDesc: '竹意軒咖啡工坊線上訂單',
       ItemName: itemName,
       ReturnURL: returnURL,
-      OrderResultURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
-      ClientBackURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
-      ChoosePayment: 'ALL',
-      NeedExtraPaidInfo: 'Y',
+      ChoosePayment: 'ALL', // 讓金流歸金流，使用者可以選任何方式付款
       EncryptType: 1,
     };
-    // ▼▼▼ 這是新加入的，用來處理物流參數的核心邏輯 ▼▼▼
-    if (logisticsType === 'CVS') {
-  // 檢查是否有門市資訊，若無則回傳錯誤，避免程式崩潰
-  if (!storeInfo || !storeInfo.id) {
-      return { statusCode: 400, body: JSON.stringify({ error: '未選擇超商取貨門市。' }) };
-  }
 
-  orderParams.LogisticsType = 'CVS';
-  orderParams.LogisticsSubType = 'UNIMART';
-  orderParams.GoodsName = '竹意軒咖啡工坊商品一批';
-  orderParams.GoodsAmount = totalAmount;
-  orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`;
-  orderParams.ChoosePayment = 'CVS';
-
-  // 現在我們可以安全地把門市資訊加進來了
-  orderParams.CVSStoreID = storeInfo.id;
-  orderParams.CVSStoreName = storeInfo.name;
-}
-    // ▲▲▲ 這是新加入的 ▲▲▲
-
-    // ▼▼▼ 我們將呼叫 Netlify Forms 的邏輯，替換成呼叫 n8n Workflow A ▼▼▼
-    try {
-      const n8n_create_order_webhook = 'https://BambooLee-n8n-free.hf.space/webhook/c188e2c1-6492-40de-9cf6-9e9d865c9fb5';
-      await fetch(n8n_create_order_webhook, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          merchantTradeNo: merchantTradeNo,
-          itemName: itemName,
-          totalAmount: totalAmount,
-          tradeDate: tradeDate
-        }),
-      });
-      console.log('已觸發 n8n「建立訂單」工作流。');
-    } catch (n8nError) {
-      console.error('觸發 n8n「建立訂單」工作流時發生錯誤:', n8nError);
+    // 如果是超商取貨，我們只做一件事：把門市資訊打包塞進自訂欄位
+    if (logisticsType === 'CVS' && storeInfo) {
+        orderParams.CustomField1 = JSON.stringify(storeInfo); // 將門市資訊偷渡過去
     }
-    // ▲▲▲ 替換完成 ▲▲▲
+    // ▲▲▲ 修改完成 ▲▲▲
+
+    // ... (您原本呼叫 n8n 的邏輯可以保留) ...
 
     const checkMacValue = generateCheckMacValue(orderParams, hashKey, hashIV);
 
