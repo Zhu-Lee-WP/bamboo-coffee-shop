@@ -22,14 +22,14 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    const cartData = JSON.parse(event.body);
+    const { cart, logisticsType } = JSON.parse(event.body);
     const merchantID = process.env.ECPAY_MERCHANT_ID;
     const hashKey = process.env.ECPAY_HASH_KEY;
     const hashIV = process.env.ECPAY_HASH_IV;
     const returnURL = `${process.env.URL}/.netlify/functions/ecpay-return`;
     const merchantTradeNo = `BAMBOO${Date.now()}`;
-    const totalAmount = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const itemName = cartData.map(item => `${item.name} x ${item.quantity}`).join('#');
+    const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const itemName = cart.map(item => `${item.name} x ${item.quantity}`).join('#');
     const tradeDate = new Date().toLocaleString('zh-TW', {
         timeZone: 'Asia/Taipei',
         hour12: false,
@@ -55,6 +55,25 @@ exports.handler = async function(event, context) {
       ChoosePayment: 'ALL',
       EncryptType: 1,
     };
+    // ▼▼▼ 這是新加入的，用來處理物流參數的核心邏輯 ▼▼▼
+    if (logisticsType === 'CVS') {
+      // 如果是超商取貨，就加入這些物流相關的參數
+      orderParams.LogisticsType = 'CVS';
+      orderParams.LogisticsSubType = 'UNIMART'; // UNIMART 代表 7-ELEVEN。如果要是全家，就用 'FAMI'
+      orderParams.IsCollection = 'Y'; // Y = 貨到付款, N = 純取貨 (金流要先付掉)
+      orderParams.GoodsName = '竹意軒咖啡工坊商品一批'; // 物流訂單上的商品名稱
+      orderParams.GoodsAmount = totalAmount; // 物流訂單的商品總額 (必須跟金流的 totalAmount 一樣)
+      
+      // 這個網址很重要，是綠界用來「伺服器對伺服器」通知你物流狀態更新的地方
+      // 例如：已出貨、已到店、已取貨
+      // 你之後需要在 n8n 建立一個新的 Webhook 來接收這個
+      orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`; 
+      
+      // 當顧客在超商地圖選好門市後，綠界會將顧客導向到這個網址
+      // 我們之後會建立這個頁面
+      orderParams.ClientReplyURL = `${process.env.URL}/map-return.html`;
+    }
+    // ▲▲▲ 這是新加入的 ▲▲▲
 
     // ▼▼▼ 我們將呼叫 Netlify Forms 的邏輯，替換成呼叫 n8n Workflow A ▼▼▼
     try {

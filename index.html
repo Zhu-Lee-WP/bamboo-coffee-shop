@@ -790,12 +790,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="p-4 border-t bg-gray-50">
             <div class="flex justify-between items-center mb-4">
                 <span class="text-lg font-bold">總計：</span>
-                <span id="cart-total" class="text-2xl font-bold text-gray-800">NT$ 0</span>
-            </div>
-            <button id="checkout-btn" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                前往結帳
-            </button>
-        </div>
+             <div class="p-4 border-t">
+    <h3 class="text-lg font-bold mb-3">選擇運送方式</h3>
+    <div class="space-y-2">
+        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50" id="logistics-home-label">
+            <input type="radio" name="logistics" value="HOME" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500" checked>
+            <span class="ml-3 text-gray-700 font-bold">宅配到府</span>
+        </label>
+        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-amber-50" id="logistics-cvs-label">
+            <input type="radio" name="logistics" value="CVS" class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+            <span class="ml-3 text-gray-700 font-bold">超商取貨 (7-ELEVEN)</span>
+        </label>
+    </div>
+    <button id="select-store-btn" class="hidden w-full mt-3 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg">
+        選擇取貨門市
+    </button>
+    <div id="store-info" class="mt-2 text-sm text-green-700 font-bold"></div>
+</div>
+<div class="p-4 border-t bg-gray-50">
+    <div class="flex justify-between items-center mb-4">
+         <span class="text-lg font-bold">總計：</span>
+         <span id="cart-total" class="text-2xl font-bold text-gray-800">NT$ 0</span>
+    </div>
+    <button id="checkout-btn" class="w-full bg-amber-800 hover:bg-amber-900 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+        前往結帳
+    </button>
+</div>
     </div>
     <script>
     // 使用 DOMContentLoaded 確保在操作DOM之前，HTML已完全載入
@@ -810,6 +830,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cartTotalEl = document.getElementById('cart-total');
         const cartCountEl = document.getElementById('cart-count');
         const checkoutBtn = document.getElementById('checkout-btn');
+        const logisticsRadios = document.querySelectorAll('input[name="logistics"]');
+        const selectStoreBtn = document.getElementById('select-store-btn');
+        const storeInfoDiv = document.getElementById('store-info');
 
         // --- 2. 初始化購物車 ---
         let cart = JSON.parse(localStorage.getItem('bamboo_cart')) || [];
@@ -823,6 +846,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cart.push({ ...product, quantity: 1 });
             }
             alert(`「${product.name}」已加入購物車！`);
+            let selectedLogistics = 'HOME'; // 預設為宅配
+
+        function handleLogisticsChange() {
+            selectedLogistics = document.querySelector('input[name="logistics"]:checked').value;
+            if (selectedLogistics === 'CVS') {
+                selectStoreBtn.classList.remove('hidden'); // 顯示選擇門市按鈕
+            } else {
+                selectStoreBtn.classList.add('hidden'); // 隱藏選擇門市按鈕
+                storeInfoDiv.innerHTML = ''; // 清空已選門市資訊
+            }
+            // 將選擇的物流方式存到 localStorage
+            localStorage.setItem('bamboo_logistics_choice', selectedLogistics);
+        }
+
+        logisticsRadios.forEach(radio => {
+            radio.addEventListener('change', handleLogisticsChange);
+        });
+
+        // 初始載入時，也執行一次，確保狀態正確
+        handleLogisticsChange();
             updateCart();
         }
 
@@ -938,7 +981,10 @@ try {
     const response = await fetch('/.netlify/functions/create-ecpay-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cart),
+        body: JSON.stringify({
+                    cart: cart,
+                    logisticsType: selectedLogistics // 把剛才存的物流選擇一起送出去
+                }),
     });
 
     if (!response.ok) {
