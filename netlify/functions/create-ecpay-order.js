@@ -71,7 +71,7 @@ exports.handler = async function(event, context) {
       
       // 當顧客在超商地圖選好門市後，綠界會將顧客導向到這個網址
       // 我們之後會建立這個頁面
-      orderParams.ClientReplyURL = `${process.env.URL}/map-return.html`;
+      // orderParams.ClientReplyURL = `${process.env.URL}/map-return.html`;
     }
     // ▲▲▲ 這是新加入的 ▲▲▲
 
