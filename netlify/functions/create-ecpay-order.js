@@ -53,26 +53,23 @@ exports.handler = async function(event, context) {
       OrderResultURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
       ClientBackURL: `${process.env.URL}/.netlify/functions/ecpay-finalize`,
       ChoosePayment: 'ALL',
+      NeedExtraPaidInfo: 'Y',
       EncryptType: 1,
     };
     // ▼▼▼ 這是新加入的，用來處理物流參數的核心邏輯 ▼▼▼
     if (logisticsType === 'CVS') {
-      // 如果是超商取貨，就加入這些物流相關的參數
-      orderParams.LogisticsType = 'CVS';
-      orderParams.LogisticsSubType = 'UNIMART'; // UNIMART 代表 7-ELEVEN。如果要是全家，就用 'FAMI'
-      //orderParams.IsCollection = 'Y'; // Y = 貨到付款, N = 純取貨 (金流要先付掉)
-      orderParams.GoodsName = '竹意軒咖啡工坊商品一批'; // 物流訂單上的商品名稱
-      orderParams.GoodsAmount = totalAmount; // 物流訂單的商品總額 (必須跟金流的 totalAmount 一樣)
-      
-      // 這個網址很重要，是綠界用來「伺服器對伺服器」通知你物流狀態更新的地方
-      // 例如：已出貨、已到店、已取貨
-      // 你之後需要在 n8n 建立一個新的 Webhook 來接收這個
-      orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`; 
-      
-      // 當顧客在超商地圖選好門市後，綠界會將顧客導向到這個網址
-      // 我們之後會建立這個頁面
-      // orderParams.ClientReplyURL = `${process.env.URL}/map-return.html`;
-    }
+  // 因為我們已經打開了 NeedExtraPaidInfo 的總開關，
+  // 所以現在可以加入所有物流擴充規格允許的參數了。
+  orderParams.LogisticsType = 'CVS';
+  orderParams.LogisticsSubType = 'UNIMART';
+  orderParams.GoodsName = '竹意軒咖啡工坊商品一批';
+  orderParams.GoodsAmount = totalAmount;
+  orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`;
+
+  // 根據文件，IsCollection 和 ClientReplyURL 確實不屬於這裡，保持註解。
+  // orderParams.IsCollection = 'Y';
+  // orderParams.ClientReplyURL = `${process.env.URL}/map-return.html`;
+}
     // ▲▲▲ 這是新加入的 ▲▲▲
 
     // ▼▼▼ 我們將呼叫 Netlify Forms 的邏輯，替換成呼叫 n8n Workflow A ▼▼▼
