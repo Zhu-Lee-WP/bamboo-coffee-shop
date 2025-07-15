@@ -61,13 +61,13 @@ exports.handler = async function(event, context) {
       orderParams.LogisticsType = 'CVS';
       orderParams.LogisticsSubType = 'UNIMART'; // UNIMART 代表 7-ELEVEN。如果要是全家，就用 'FAMI'
       orderParams.IsCollection = 'Y'; // Y = 貨到付款, N = 純取貨 (金流要先付掉)
-      orderParams.GoodsName = '竹意軒咖啡工坊商品一批'; // 物流訂單上的商品名稱
-      orderParams.GoodsAmount = totalAmount; // 物流訂單的商品總額 (必須跟金流的 totalAmount 一樣)
+      // orderParams.GoodsName = '竹意軒咖啡工坊商品一批'; // 物流訂單上的商品名稱
+      // orderParams.GoodsAmount = totalAmount; // 物流訂單的商品總額 (必須跟金流的 totalAmount 一樣)
       
       // 這個網址很重要，是綠界用來「伺服器對伺服器」通知你物流狀態更新的地方
       // 例如：已出貨、已到店、已取貨
       // 你之後需要在 n8n 建立一個新的 Webhook 來接收這個
-      orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`; 
+      //orderParams.ServerReplyURL = `${process.env.URL}/.netlify/functions/ecpay-logistics-return`; 
       
       // 當顧客在超商地圖選好門市後，綠界會將顧客導向到這個網址
       // 我們之後會建立這個頁面
