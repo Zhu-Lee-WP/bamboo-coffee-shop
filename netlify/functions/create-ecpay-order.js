@@ -1,10 +1,9 @@
 // 檔案路徑: netlify/functions/create-ecpay-order.js
-// 最終版本 - 移除 Netlify Forms，改為呼叫 n8n 建立訂單
+// 最終版本 - 整合 n8n 訂單建立與門市資訊紀錄
 
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 
-// ... generateCheckMacValue 函式維持不變 ...
 function generateCheckMacValue(params, hashKey, hashIV) {
     const sortedKeys = Object.keys(params).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     let checkString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
@@ -15,14 +14,12 @@ function generateCheckMacValue(params, hashKey, hashIV) {
     return hash.toUpperCase();
 }
 
-
 exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    // 現在我們也接收 storeInfo
     const { cart, logisticsType, storeInfo } = JSON.parse(event.body);
     const merchantID = process.env.ECPAY_MERCHANT_ID;
     const hashKey = process.env.ECPAY_HASH_KEY;
@@ -36,7 +33,6 @@ exports.handler = async function(event, context) {
         day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
     }).replace(/-/g, '/');
 
-    // ▼▼▼ 這是一個全新的、簡化的 orderParams 物件 ▼▼▼
     let orderParams = {
       MerchantID: merchantID,
       MerchantTradeNo: merchantTradeNo,
@@ -46,17 +42,44 @@ exports.handler = async function(event, context) {
       TradeDesc: '竹意軒咖啡工坊線上訂單',
       ItemName: itemName,
       ReturnURL: returnURL,
-      ChoosePayment: 'ALL', // 讓金流歸金流，使用者可以選任何方式付款
+      ChoosePayment: 'ALL',
       EncryptType: 1,
     };
 
-    // 如果是超商取貨，我們只做一件事：把門市資訊打包塞進自訂欄位
-    if (logisticsType === 'CVS' && storeInfo) {
-        orderParams.CustomField1 = JSON.stringify(storeInfo); // 將門市資訊偷渡過去
-    }
-    // ▲▲▲ 修改完成 ▲▲▲
+    // 準備要發送到 n8n 的資料
+    const payloadToN8n = {
+        merchantTradeNo: merchantTradeNo,
+        itemName: itemName,
+        totalAmount: totalAmount,
+        tradeDate: tradeDate,
+        status: 'PENDING' // 初始狀態為待付款
+    };
 
-    // ... (您原本呼叫 n8n 的邏輯可以保留) ...
+    // 如果是超商取貨，我們將門市資訊同時加入到 orderParams 和 n8n 的 payload 中
+    if (logisticsType === 'CVS' && storeInfo) {
+        orderParams.CustomField1 = JSON.stringify(storeInfo); // 嘗試偷渡，雖然不會被回傳，但沒有壞處
+        payloadToN8n.storeInfo = storeInfo; // 將門市資訊明確地加入到要發送至 n8n 的資料中
+        payloadToN8n.logisticsType = 'CVS';
+    } else {
+        payloadToN8n.logisticsType = 'HOME';
+    }
+
+    // ▼▼▼ 在建立綠界訂單前，先呼叫 n8n Webhook 記錄這筆訂單 ▼▼▼
+    try {
+      // 這裡請使用您「建立訂單」的 n8n webhook URL
+      const n8n_create_order_webhook = 'https://BambooLee-n8n-free.hf.space/webhook/c188e2c1-6492-40de-9cf6-9e9d865c9fb5'; 
+      
+      await fetch(n8n_create_order_webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadToN8n),
+      });
+      console.log(`[N8N] 已觸發「建立訂單」工作流 for ${merchantTradeNo}`);
+    } catch (n8nError) {
+      console.error('[N8N] 觸發「建立訂單」工作流時發生錯誤:', n8nError);
+      // 即使 n8n 失敗，我們仍然繼續金流流程，確保顧客可以付款
+    }
+    // ▲▲▲ 已恢復 n8n 呼叫 ▲▲▲
 
     const checkMacValue = generateCheckMacValue(orderParams, hashKey, hashIV);
 
